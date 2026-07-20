@@ -1,7 +1,5 @@
 # Multi-Tenant RBAC DBMS (SaaS Core)
 
-A fully isolated, multi-tenant database management system (DBMS) built for SaaS environments. This system features a robust **Role-Based Access Control (RBAC)** architecture supporting 20 different hierarchical roles, strict data isolation boundaries using Tenant UUIDs, full audit logging via MySQL triggers, and dual-login systems for Super Admins and Company Employees.
-
 ---
 
 ## 🏗️ Project Architecture & Directory Structure
@@ -32,6 +30,7 @@ A fully isolated, multi-tenant database management system (DBMS) built for SaaS 
 This application leverages raw **MariaDB/MySQL** features, enforcing business logic directly at the database layer using Triggers, Views, and Stored Functions to maximize performance and guarantee data integrity across all tenants.
 
 ### Entity-Relationship (ER) Overview
+
 ```mermaid
 erDiagram
     COMPANIES ||--o{ USERS : "employs"
@@ -77,10 +76,27 @@ erDiagram
 ```
 
 ### Advanced DBMS Features Implemented
+
 1. **Triggers (`trg_after_user_insert`)**: Automatically intercepts `INSERT` operations on the `users` table and automatically creates a permanent audit trail in the `logs` table without requiring backend application logic.
 2. **Database Views (`restricted_employee_view`)**: Exposes a sanitized, read-only slice of the `users` table (hiding sensitive `password_hash` columns) optimized for secure directory listing.
 3. **Stored Functions (`count_users_per_company`)**: A deterministic SQL function that rapidly aggregates employee counts per tenant directly in the memory layer.
 4. **Referential Integrity Constraints**: Strict `FOREIGN KEY` tracking with `ON DELETE CASCADE` preventing orphan users when companies are removed.
+
+---
+
+## 🔄 System Architecture Flow
+
+The diagram below traces a request end-to-end — from the Docker Compose runtime that boots every service, through the FastAPI backend's routing and RBAC middleware, down to the MariaDB integrity layer that enforces schema, triggers, and audit rules. It also shows how the shared TypeScript contracts (OpenAPI spec, Zod validators, generated API client) keep the Streamlit UI and backend in sync.
+
+![Multi-Tenant System Architecture Flow](Reference\Mutli-Telnet_Flow_2999x7500.png)
+
+**Flow summary:**
+- **Compose Runtime** builds and starts the backend and frontend containers, then runs `startup.sh`, which initializes the database schema before the API comes up.
+- **FastAPI Backend** wires together route registration (`__init__.py`), authentication (`auth.py`), and the RBAC/tenant-isolation middleware, which every company and user route passes through.
+- **Clients & Contracts** shows how the OpenAPI spec and shared DB schema generate the Zod validation contracts and the typed React/TS client used to talk to the API.
+- **MariaDB Integrity Layer** bootstraps and seeds the schema, then enforces referential integrity, triggers, and audit logging directly at the database level.
+
+> **Note:** Place the exported diagram image at `Reference/Mutli-Telnet Flow.png` in the repository (as shown in your project explorer) so this embed resolves correctly on GitHub.
 
 ---
 
@@ -106,6 +122,7 @@ You do not need MySQL installed on your local machine for this.
 ---
 
 ### Option 2: Manual / Local Host Installation
+
 If you prefer running the application natively, ensure **MariaDB/MySQL** is installed and running on your system.
 
 **1. Install Python Dependencies**
@@ -168,6 +185,7 @@ http://localhost:8501
 - **Dual Authenticators**: `auth/super-login` (for SaaS infrastructure managers) vs `auth/tenant-login` (for isolated company workers).
 
 ## 💡 Default Credentials
+
 For immediate testing after initialization:
 - **System Admin**: `username: superadmin`, `password: superadmin123`
 - **Tenant Admin (Acme Corp)**: `username: admin`, `password: admin123`
