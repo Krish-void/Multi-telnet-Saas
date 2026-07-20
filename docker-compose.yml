@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.6
+    container_name: saas_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: saas_root_password
+      MYSQL_DATABASE: saas_dbms
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: saas_fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=saas_root_password
+      - DB_NAME=saas_dbms
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: saas_streamlit
+    ports:
+      - "5000:5000"
+    environment:
+      - API_URL=http://backend:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app/frontend
+
+volumes:
+  mariadb_data:
