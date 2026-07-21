@@ -88,7 +88,7 @@ erDiagram
 
 The diagram below traces a request end-to-end — from the Docker Compose runtime that boots every service, through the FastAPI backend's routing and RBAC middleware, down to the MariaDB integrity layer that enforces schema, triggers, and audit rules. It also shows how the shared TypeScript contracts (OpenAPI spec, Zod validators, generated API client) keep the Streamlit UI and backend in sync.
 
-![Multi-Tenant System Architecture Flow](Reference\Mutli-Telnet_Flow_2999x7500.png)
+![Multi-Tenant System Architecture Flow](Reference/Mutli-Telnet_Flow_2999x7500.png)
 
 **Flow summary:**
 - **Compose Runtime** builds and starts the backend and frontend containers, then runs `startup.sh`, which initializes the database schema before the API comes up.
